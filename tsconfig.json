@@ -11,10 +11,15 @@
     "moduleResolution": "node16",
     "target": "esnext",
     "types": [],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
     "baseUrl": "./src",
     "paths": {
       "#config/*": ["config/*"],
       "#domains/*": ["domains/*"],
+      "#helpers/*": ["helpers/*"],
       "#middlewares/*": ["middlewares/*"],
       "#routes/*": ["routes/*"],
       "#utils/*": ["utils/*"]

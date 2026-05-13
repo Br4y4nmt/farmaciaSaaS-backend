@@ -4,7 +4,11 @@ import "#domains/roles/model";
 import "#domains/permisos/model";
 import "#domains/rolPermisos/model";
 import "#domains/empresas/model";
+import "#domains/sucursales/model";
+import "#domains/usuarios/model";
 
+import { seedEmpresa } from "../seeders/empresaSeeder";
+import { seedUsuarioSuperAdmin } from "../seeders/usuarioSeeder";
 import { seedRoles } from "../seeders/roleSeeder";
 import { seedPermisos } from "../seeders/permisoSeeder";
 import { seedRolPermisos } from "../seeders/rolPermisoSeeder";
@@ -22,6 +26,8 @@ export const syncDatabase = async () => {
     await seedRoles();
     await seedPermisos();
     await seedRolPermisos();
+    await seedEmpresa();
+    await seedUsuarioSuperAdmin();
   } catch (error) {
     console.error("Error al sincronizar DB ", error);
   }
