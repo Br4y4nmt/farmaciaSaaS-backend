@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 
 import Usuario from "#domains/usuarios/model";
+import Role from "#domains/roles/model";
 import comparePassword from "#helpers/comparePassword";
 import generateToken from "#helpers/generateToken";
 
@@ -65,9 +66,14 @@ export const login = async (
 			{ where: { id: usuarioData.id } }
 		);
 
+		// Obtener codigo del rol para incluir en el token (evita consultar DB en cada request)
+		const rolModel = await Role.findByPk(usuarioData.rol_id);
+		const rolCodigo = rolModel ? (rolModel.getDataValue("codigo") as string) : undefined;
+
 		const token = generateToken({
 			id: usuarioData.id,
 			rol_id: usuarioData.rol_id,
+			rol: rolCodigo,
 			empresa_id: usuarioData.empresa_id,
 		});
 

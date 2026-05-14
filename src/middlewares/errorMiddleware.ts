@@ -1,16 +1,24 @@
 import { Request, Response, NextFunction } from "express";
 
+interface AppError extends Error {
+  status?: number;
+  expose?: boolean;
+}
+
 const errorMiddleware = (
-  err: any,
+  err: AppError,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  console.error(err);
+  const status = err.status ?? 500;
+  const message = err.expose ? err.message : "Error interno del servidor";
 
-  return res.status(500).json({
+  console.error(`[${req.method}] ${req.path} →`, err.message);
+
+  return res.status(status).json({
     ok: false,
-    message: "Error interno del servidor",
+    message,
   });
 };
 
