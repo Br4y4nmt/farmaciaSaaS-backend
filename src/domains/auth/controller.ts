@@ -82,9 +82,11 @@ export const login = async (
 			},
 		});
 	} catch (error) {
+		console.error("Error en login:", error);
 		return res.status(500).json({
 			ok: false,
 			message: "Error al iniciar sesion",
+			error: error instanceof Error ? error.message : "Error desconocido",
 		});
 	}
 };
