@@ -33,6 +33,12 @@ const RolPermiso = sequelize.define(
   {
     tableName: "rol_permisos",
     timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ["rol_id", "permiso_id"],
+      },
+    ],
   }
 );
 

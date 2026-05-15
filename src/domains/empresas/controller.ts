@@ -5,7 +5,7 @@ import sequelize from "#config/db";
 import Empresa from "#domains/empresas/model";
 import Usuario from "#domains/usuarios/model";
 import Role from "#domains/roles/model";
-import hashPassword from "#helpers/hashPassword"; // el que uses para bcrypt
+import hashPassword from "#helpers/hashPassword"; 
 
 
 // Obtener empresas
