@@ -1,10 +1,17 @@
 import { Router } from "express";
-import { getEmpresas, createEmpresa, updateEmpresa, deleteEmpresa }from "./controller";
+import {
+  getEmpresas,
+  createEmpresa,
+  updateEmpresa,
+  getEmpresasUsuariosResumen,
+  deleteEmpresa,
+  updateEmpresaSubscription,
+} from "./controller";
+
 import authMiddleware from "#middlewares/authMiddleware";
 import roleMiddleware from "#middlewares/roleMiddleware";
 
 const router = Router();
-
 
 // Obtener todas las empresas (solo para SUPER_ADMIN)
 router.get(
@@ -14,12 +21,20 @@ router.get(
   getEmpresas
 );
 
-// Crear empresa 
+// Crear empresa
 router.post(
-	"/",
-	authMiddleware,
-	roleMiddleware(["SUPER_ADMIN", "ADMIN_EMPRESA"]),
-	createEmpresa
+  "/",
+  authMiddleware,
+  roleMiddleware(["SUPER_ADMIN", "ADMIN_EMPRESA"]),
+  createEmpresa
+);
+
+// Obtener resumen de usuarios por empresa (solo para SUPER_ADMIN)
+router.get(
+  "/usuarios-resumen",
+  authMiddleware,
+  roleMiddleware(["SUPER_ADMIN"]),
+  getEmpresasUsuariosResumen
 );
 
 // Editar empresa
@@ -30,7 +45,15 @@ router.put(
   updateEmpresa
 );
 
-// Eliminar empresa (soft delete)
+// Editar suscripción de empresa
+router.patch(
+  "/:id/subscription",
+  authMiddleware,
+  roleMiddleware(["SUPER_ADMIN"]),
+  updateEmpresaSubscription
+);
+
+// Eliminar empresa
 router.delete(
   "/:id",
   authMiddleware,

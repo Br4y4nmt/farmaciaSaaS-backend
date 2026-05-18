@@ -1,8 +1,15 @@
 import { Router } from "express";
-import { getUsuarios } from "./controller";
+import { createUsuario } from "./controller";
+import authMiddleware from "#middlewares/authMiddleware";
+import roleMiddleware from "#middlewares/roleMiddleware";
 
 const router = Router();
 
-router.get("/", getUsuarios);
+router.post(
+  "/",
+  authMiddleware,
+  roleMiddleware(["SUPER_ADMIN"]),
+  createUsuario
+);
 
 export default router;

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { Transaction } from "sequelize";
-import { Op } from "sequelize";
+import { Transaction, Op } from "sequelize";
 import sequelize from "#config/db";
 import Empresa from "#domains/empresas/model";
 import Usuario from "#domains/usuarios/model";
 import Role from "#domains/roles/model";
-import hashPassword from "#helpers/hashPassword"; 
+import Plan from "#domains/planes/model";
+import hashPassword from "#helpers/hashPassword";
 
 
 // Obtener empresas
@@ -25,8 +25,6 @@ export const getEmpresas = async (
     const pageNumber = Math.max(1, parseInt(page));
     const limitNumber = Math.min(100, Math.max(1, parseInt(limit)));
     const offset = (pageNumber - 1) * limitNumber;
-
-    // ── Filtros opcionales ─────────────────────────────────────
     const where: Record<string, any> = {};
 
     if (nombre) {
@@ -37,12 +35,18 @@ export const getEmpresas = async (
       where.estado = estado === "true";
     }
 
-    // ── Consulta ───────────────────────────────────────────────
     const { count, rows } = await Empresa.findAndCountAll({
       where,
       order: [["created_at", "DESC"]],
       limit: limitNumber,
       offset,
+    include: [
+      {
+        model: Plan,
+        as: "plan",
+        attributes: ["id", "nombre"],
+      },
+    ],
     });
 
     return res.status(200).json({
@@ -55,7 +59,6 @@ export const getEmpresas = async (
         empresas: rows,
       },
     });
-
   } catch (error) {
     next(error);
   }
@@ -87,7 +90,6 @@ export const createEmpresa = async (
       admin_telefono,
     } = req.body as Record<string, any>;
 
-    // ── Validaciones ──────────────────────────────────────────
     if (!nombre) {
       await t.rollback();
       return res.status(400).json({ ok: false, message: "El nombre de la empresa es requerido" });
@@ -98,7 +100,6 @@ export const createEmpresa = async (
       return res.status(400).json({ ok: false, message: "Los datos del administrador son requeridos" });
     }
 
-    // ── Buscar rol ADMIN_EMPRESA ───────────────────────────────
     const rolAdmin = await Role.findOne({
       where: { codigo: "ADMIN_EMPRESA" },
       transaction: t,
@@ -110,8 +111,6 @@ export const createEmpresa = async (
     }
 
     const rol_id = rolAdmin.getDataValue("id") as number;
-
-    // ── Crear empresa ─────────────────────────────────────────
     const empresa = await Empresa.create(
       {
         nombre,
@@ -127,8 +126,6 @@ export const createEmpresa = async (
     );
 
     const empresa_id = empresa.getDataValue("id") as number;
-
-    // ── Crear usuario administrador ────────────────────────────
     const passwordHash = await hashPassword(admin_password);
 
     const usuario = await Usuario.create(
@@ -163,6 +160,8 @@ export const createEmpresa = async (
     next(error);
   }
 };
+
+
 
 // ── EDITAR EMPRESA ─────────────────────────────────────────────
 export const updateEmpresa = async (
@@ -227,6 +226,7 @@ export const updateEmpresa = async (
   }
 };
 
+
 // ── ELIMINAR EMPRESA ───────────────────────────────────────────
 export const deleteEmpresa = async (
   req: Request,
@@ -266,3 +266,165 @@ export const deleteEmpresa = async (
     next(error);
   }
 };
+
+// obtener resumen de usuarios por empresa (solo para SUPER_ADMIN)
+export const getEmpresasUsuariosResumen = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      page = "1",
+      limit = "10",
+      nombre,
+      estado,
+    } = req.query as Record<string, string>;
+
+    const pageNumber = Math.max(1, parseInt(page));
+    const limitNumber = Math.min(100, Math.max(1, parseInt(limit)));
+    const offset = (pageNumber - 1) * limitNumber;
+
+    const where: Record<string, any> = {};
+
+    if (nombre) {
+      where.nombre = {
+        [Op.like]: `%${nombre}%`,
+      };
+    }
+
+    if (estado !== undefined) {
+      where.estado = estado === "true";
+    }
+
+    const total = await Empresa.count({
+      where,
+    });
+
+    const empresas = await Empresa.findAll({
+      where,
+
+      attributes: ["id", "nombre", "ruc", "estado"],
+
+      include: [
+        {
+          model: Usuario,
+          as: "usuarios",
+          attributes: [
+            "id",
+            "nombres",
+            "apellidos",
+            "correo",
+            "telefono",
+            "rol_id",
+            "estado",
+          ],
+          required: false,
+          separate: true,
+          include: [
+            {
+              model: Role,
+              as: "rol",
+              attributes: ["id", "nombre"],
+              required: false,
+            },
+          ],
+        },
+        {
+          model: Plan,
+          as: "plan",
+          attributes: ["id", "nombre"],
+          required: false,
+        },
+      ],
+
+      order: [["created_at", "DESC"]],
+      limit: limitNumber,
+      offset,
+    });
+
+    const resultado = empresas.map((empresa: any) => {
+      const data = empresa.get({ plain: true });
+
+      return {
+        id: data.id,
+        nombre: data.nombre,
+        ruc: data.ruc,
+        estado: data.estado,
+        totalUsuarios: data.usuarios?.length || 0,
+        plan: data.plan,
+        usuarios:
+          data.usuarios?.map((usuario: any) => ({
+            id: usuario.id,
+            nombres: usuario.nombres,
+            apellidos: usuario.apellidos,
+            correo: usuario.correo,
+            telefono: usuario.telefono,
+            rol_id: usuario.rol_id,
+            rol_nombre: usuario.rol?.nombre ?? null,
+            estado: usuario.estado,
+          })) || [],
+      };
+    });
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        total,
+        page: pageNumber,
+        limit: limitNumber,
+        totalPages: Math.ceil(total / limitNumber),
+        empresas: resultado,
+      },
+    });
+  } catch (error: any) {
+    console.log(error.message);
+    console.log(error.sql);
+
+    next(error);
+  }
+};
+
+
+// actualizar suscripción de empresa (plan y fechas)
+export const updateEmpresaSubscription = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = Number(req.params.id)
+
+    if (!id || Number.isNaN(id)) {
+      return res.status(400).json({
+        ok: false,
+        message: 'ID de empresa inválido',
+      })
+    }
+
+    const { plan_id, fecha_inicio, fecha_vencimiento } = req.body
+
+    const empresa = await Empresa.findByPk(id)
+
+    if (!empresa) {
+      return res.status(404).json({
+        ok: false,
+        message: 'Empresa no encontrada',
+      })
+    }
+
+    await empresa.update({
+      plan_id: plan_id || null,
+      fecha_inicio: fecha_inicio || null,
+      fecha_vencimiento: fecha_vencimiento || null,
+    })
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Suscripción actualizada correctamente',
+      data: empresa,
+    })
+  } catch (error) {
+    next(error)
+  }
+}

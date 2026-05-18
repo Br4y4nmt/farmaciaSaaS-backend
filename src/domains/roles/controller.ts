@@ -1,16 +1,35 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
+import { Op } from "sequelize";
+import Role from "./model";
 
-export const getRoles = async (req: Request, res: Response) => {
+export const getRoles = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    res.json({
+    const roles = await Role.findAll({
+      where: {
+        codigo: {
+          [Op.ne]: "SUPER_ADMIN",
+        },
+      },
+
+      attributes: [
+        "id",
+        "codigo",
+        "nombre",
+      ],
+
+      order: [["id", "ASC"]],
+    });
+
+    return res.status(200).json({
       ok: true,
-      message: "Lista de roles",
-      data: [],
+      data: roles,
     });
+
   } catch (error) {
-    res.status(500).json({
-      ok: false,
-      message: "Error al obtener roles",
-    });
+    next(error);
   }
 };

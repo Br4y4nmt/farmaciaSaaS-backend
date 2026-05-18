@@ -13,7 +13,6 @@ const Sucursal = sequelize.define(
     empresa_id: {
       type: DataTypes.BIGINT,
       allowNull: false,
-
       references: {
         model: "empresas",
         key: "id",
@@ -25,13 +24,48 @@ const Sucursal = sequelize.define(
       allowNull: false,
     },
 
-    direccion: {
+    codigo: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+
+    direccion_fiscal: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    direccion_comercial: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    departamento: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+
+    provincia: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+
+    distrito: {
+      type: DataTypes.STRING(100),
       allowNull: true,
     },
 
     telefono: {
       type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+
+    correo_contacto: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+
+    responsable: {
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
 
@@ -42,7 +76,8 @@ const Sucursal = sequelize.define(
   },
   {
     tableName: "sucursales",
-    timestamps: false,
+    timestamps: true,
+    underscored: true,
   }
 );
 

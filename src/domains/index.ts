@@ -79,6 +79,10 @@ Permiso.belongsToMany(Role, {
   otherKey: "rol_id",
   as: "roles",
 });
+
+/* =========================
+   PLANES - EMPRESAS
+========================= */
 Plan.hasMany(Empresa, {
   foreignKey: "plan_id",
   as: "empresas",
@@ -88,6 +92,8 @@ Empresa.belongsTo(Plan, {
   foreignKey: "plan_id",
   as: "plan",
 });
+
+
 export {
   Empresa,
   Sucursal,

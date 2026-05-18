@@ -19,7 +19,7 @@ export const syncDatabase = async () => {
 
     console.log("Base de datos conectada");
 
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
 
     console.log("Tablas sincronizadas");
 
