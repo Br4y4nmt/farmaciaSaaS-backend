@@ -5,6 +5,10 @@ import Role from "./roles/model";
 import Permiso from "./permisos/model";
 import RolPermiso from "./rolPermisos/model";
 import Plan from "./planes/model";
+import Producto from "./productos/model";
+import Categoria from "./categoria/model";
+import Laboratorio from "./laboratorios/model";
+import Marca from "./marcas/model";
 
 /* =========================
    EMPRESAS - SUCURSALES
@@ -93,6 +97,71 @@ Empresa.belongsTo(Plan, {
   as: "plan",
 });
 
+/* =========================
+   EMPRESAS - PRODUCTOS
+========================= */
+Empresa.hasMany(Producto, {
+  foreignKey: "empresa_id",
+  as: "productos",
+});
+
+Producto.belongsTo(Empresa, {
+  foreignKey: "empresa_id",
+  as: "empresa",
+});
+
+/* =========================
+   EMPRESAS - CATEGORIAS
+========================= */
+Empresa.hasMany(Categoria, {
+  foreignKey: "empresa_id",
+  as: "categorias",
+});
+
+Categoria.belongsTo(Empresa, {
+  foreignKey: "empresa_id",
+  as: "empresa",
+});
+
+/* =========================
+   CATEGORIAS - CATEGORIAS
+========================= */
+Categoria.hasMany(Categoria, {
+  foreignKey: "parent_id",
+  as: "subcategorias",
+});
+
+Categoria.belongsTo(Categoria, {
+  foreignKey: "parent_id",
+  as: "categoria_padre",
+});
+
+/* =========================
+   EMPRESAS - LABORATORIOS
+========================= */
+Empresa.hasMany(Laboratorio, {
+  foreignKey: "empresa_id",
+  as: "laboratorios",
+});
+
+Laboratorio.belongsTo(Empresa, {
+  foreignKey: "empresa_id",
+  as: "empresa",
+});
+
+/* =========================
+   EMPRESAS - MARCAS
+========================= */
+Empresa.hasMany(Marca, {
+  foreignKey: "empresa_id",
+  as: "marcas",
+});
+
+Marca.belongsTo(Empresa, {
+  foreignKey: "empresa_id",
+  as: "empresa",
+});
+
 
 export {
   Empresa,
@@ -102,4 +171,8 @@ export {
   Permiso,
   RolPermiso,
   Plan,
+  Producto,
+  Categoria,
+  Laboratorio,
+  Marca,
 };
